@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "297552160824",
+    "firebase_url": "https://iotani-kelompok3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "iotani-kelompok3",
+    "storage_bucket": "iotani-kelompok3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297552160824:android:fc87561bfb519fcbc09ecd",
+        "android_client_info": {
+          "package_name": "com.example.iotani_berhasil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG-QC7WErOHPtSzwmAGlMikp6cSAXcvLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297552160824:android:1fe150305eed9039c09ecd",
+        "android_client_info": {
+          "package_name": "com.example.iotaniberhasil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG-QC7WErOHPtSzwmAGlMikp6cSAXcvLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297552160824:android:14e48659551eafc6c09ecd",
+        "android_client_info": {
+          "package_name": "com.kelompok3.iotani"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG-QC7WErOHPtSzwmAGlMikp6cSAXcvLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

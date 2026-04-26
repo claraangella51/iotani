@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iotani_berhasil/core/firebase/firebase_service.dart';
@@ -169,28 +170,47 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                         final uid = credential.user?.uid;
                         if (uid != null) {
-                          await firebaseService.setUserProfile(
-                            userId: uid,
-                            profile: {
-                              'name': name,
-                              'email': email,
-                              'role': 'user',
-                              'createdAt': ServerValue.timestamp,
-                            },
-                          );
+                          try {
+                            await firebaseService.setUserProfile(
+                              userId: uid,
+                              profile: {
+                                'name': name,
+                                'email': email,
+                                'role': 'user',
+                                'createdAt': ServerValue.timestamp,
+                              },
+                            );
+                          } catch (_) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Akun berhasil dibuat, tapi profil belum tersimpan.',
+                                ),
+                              ),
+                            );
+                          }
 
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Registrasi berhasil!'),
                             ),
                           );
-                          context.go('/dashboard');
+                          // Router app already listens to authStateChanges and
+                          // redirects authenticated users to /dashboard.
                         } else {
                           throw Exception(
                             'UID tidak ditemukan setelah registrasi.',
                           );
                         }
+                      } on FirebaseAuthException catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(_mapAuthErrorMessage(e.code))),
+                        );
                       } catch (e) {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Gagal daftar: $e')),
                         );
@@ -229,5 +249,20 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       ),
     );
+  }
+
+  String _mapAuthErrorMessage(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'Email sudah terdaftar.';
+      case 'invalid-email':
+        return 'Format email tidak valid.';
+      case 'weak-password':
+        return 'Password terlalu lemah (minimal 6 karakter).';
+      case 'operation-not-allowed':
+        return 'Metode daftar email/password belum diaktifkan.';
+      default:
+        return 'Registrasi gagal. Silakan coba lagi.';
+    }
   }
 }

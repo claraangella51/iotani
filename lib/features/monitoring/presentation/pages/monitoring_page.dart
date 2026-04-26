@@ -100,6 +100,10 @@ class MonitoringPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
 
+                      // Recommendation
+                      _buildRecommendationSection(activePlant),
+                      const SizedBox(height: 24),
+
                       // Explanation
                       Card(
                         color: AppTheme.primaryGreen.withOpacity(0.05),
@@ -150,8 +154,6 @@ class MonitoringPage extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Column(
                                           crossAxisAlignment:
@@ -173,11 +175,6 @@ class MonitoringPage extends ConsumerWidget {
                                               ),
                                             ),
                                           ],
-                                        ),
-                                        RiskStatusBadge(
-                                          status: _parseRiskStatus(
-                                            reading.riskStatus,
-                                          ),
                                         ),
                                       ],
                                     ),
@@ -314,32 +311,112 @@ class MonitoringPage extends ConsumerWidget {
     return AppTheme.statusAman;
   }
 
-  String _getExplanation(DeviceState state, PlantProfile plant) {
-    if (state.soilMoisture > 80 && state.lightLux < 300) {
-      return 'Tanah terlalu lembap dan cahaya terlalu rendah. Kondisi ini dapat meningkatkan risiko jamur. Pertimbangkan untuk mengurangi penyiraman dan menambah pencahayaan.';
-    } else if (state.soilMoisture > 80) {
-      return 'Tanah terlalu lembap. Kurangi frekuensi penyiraman untuk mencegah pembusukan akar dan penyakit jamur.';
-    } else if (state.lightLux < 300) {
-      return 'Cahaya terlalu rendah. Tanaman membutuhkan lebih banyak cahaya untuk proses fotosintesis yang optimal.';
-    } else if (state.soilMoisture < plant.soilMoistureMin) {
-      return 'Tanah terlalu kering. Perbanyak penyiraman untuk memenuhi kebutuhan air tanaman.';
-    } else if (state.lightLux > plant.lightLuxMax) {
-      return 'Cahaya terlalu kuat. Pertimbangkan untuk memberikan naungan parsial.';
-    }
-    return 'Kondisi tanaman optimal. Nikmati pertumbuhan tanaman yang sehat!';
+  Widget _buildRecommendationSection(PlantProfile plant) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Rekomendasi',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          color: AppTheme.accentLime.withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rentang Ideal untuk ${plant.name}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.water_drop,
+                            color: AppTheme.secondaryMint,
+                            size: 20,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tanah: ${plant.soilMoistureMin}-${plant.soilMoistureMax}%',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.light_mode,
+                            color: Color(0xFFFFB800),
+                            size: 20,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Cahaya: ${plant.lightLuxMin}-${plant.lightLuxMax}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  RiskStatus _parseRiskStatus(String status) {
-    switch (status.toLowerCase()) {
-      case 'aman':
-        return RiskStatus.aman;
-      case 'waspada':
-        return RiskStatus.waspada;
-      case 'risiko_tinggi':
-      case 'risikoTinggi':
-        return RiskStatus.risikoTinggi;
-      default:
-        return RiskStatus.aman;
+  String _getExplanation(DeviceState state, PlantProfile plant) {
+    final notes = <String>[];
+
+    if (state.soilMoisture < plant.soilMoistureMin) {
+      notes.add(
+        'Tanah terlalu kering. Tambahkan penyiraman bertahap sampai kelembapan masuk rentang ideal ${plant.soilMoistureMin}-${plant.soilMoistureMax}%.',
+      );
+    } else if (state.soilMoisture > plant.soilMoistureMax) {
+      notes.add(
+        'Tanah terlalu basah. Kurangi frekuensi penyiraman dan pastikan drainase baik agar akar tidak busuk.',
+      );
     }
+
+    if (state.lightLux < plant.lightLuxMin) {
+      notes.add(
+        'Intensitas cahaya terlalu rendah. Pindahkan tanaman ke area lebih terang atau tambah lampu tanam.',
+      );
+    } else if (state.lightLux > plant.lightLuxMax) {
+      notes.add(
+        'Intensitas cahaya terlalu tinggi. Berikan naungan parsial atau jauhkan dari sumber cahaya langsung.',
+      );
+    }
+
+    if (notes.isEmpty) {
+      return 'Kelembapan tanah dan intensitas cahaya sudah dalam rentang ideal untuk tanaman ini.';
+    }
+
+    return notes.join(' ');
   }
 }

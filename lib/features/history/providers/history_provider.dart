@@ -18,7 +18,7 @@ final alertsProvider = StreamProvider<List<AlertRecord>>((ref) async* {
       id: '2',
       title: 'Notifikasi IoTani',
       message:
-          'Tanah mulai terlalu lembap. Pertimbangkan untuk mengurangi penyiraman.',
+          'Tanah mulai terlalu basah. Pertimbangkan untuk mengurangi penyiraman.',
       riskStatus: 'waspada',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       read: true,

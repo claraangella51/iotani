@@ -37,12 +37,14 @@ class _ActuatorButtonState extends State<ActuatorButton> {
       child: SizedBox(
         height: 24,
         child: widget.isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    widget.isActive ? Colors.white : AppTheme.primaryGreen,
+                  ),
                 ),
               )
             : Row(

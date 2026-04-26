@@ -93,11 +93,10 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                                       ),
                                       onPressed: () {
                                         ref
-                                                .read(
-                                                  modeStateProvider.notifier,
-                                                )
-                                                .state =
-                                            'otomatis';
+                                            .read(
+                                              commandStatusProvider.notifier,
+                                            )
+                                            .setMode('auto');
                                       },
                                       child: const Text('Otomatis'),
                                     ),
@@ -112,11 +111,10 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                                       ),
                                       onPressed: () {
                                         ref
-                                                .read(
-                                                  modeStateProvider.notifier,
-                                                )
-                                                .state =
-                                            'manual';
+                                            .read(
+                                              commandStatusProvider.notifier,
+                                            )
+                                            .setMode('manual');
                                       },
                                       child: const Text('Manual'),
                                     ),
@@ -218,7 +216,8 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                                         );
                                       },
                                       isLoading:
-                                          commandStatus.state.name == 'loading',
+                                          commandStatus.state ==
+                                          CommandState.loading,
                                       iconType: 'pump',
                                     ),
                                   ],
@@ -274,7 +273,8 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                                         );
                                       },
                                       isLoading:
-                                          commandStatus.state.name == 'loading',
+                                          commandStatus.state ==
+                                          CommandState.loading,
                                       iconType: 'uv',
                                     ),
                                   ],
@@ -330,7 +330,7 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                       // Command Status
                       if (commandStatus.message != null)
                         Card(
-                          color: commandStatus.state.name == 'success'
+                          color: commandStatus.state == CommandState.success
                               ? AppTheme.statusAman.withOpacity(0.1)
                               : AppTheme.statusRisikoTinggi.withOpacity(0.1),
                           child: Padding(
@@ -338,10 +338,12 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                             child: Row(
                               children: [
                                 Icon(
-                                  commandStatus.state.name == 'success'
+                                  commandStatus.state == CommandState.success
                                       ? Icons.check_circle
                                       : Icons.error,
-                                  color: commandStatus.state.name == 'success'
+                                  color:
+                                      commandStatus.state ==
+                                          CommandState.success
                                       ? AppTheme.statusAman
                                       : AppTheme.statusRisikoTinggi,
                                 ),
@@ -352,7 +354,8 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       color:
-                                          commandStatus.state.name == 'success'
+                                          commandStatus.state ==
+                                              CommandState.success
                                           ? AppTheme.statusAman
                                           : AppTheme.statusRisikoTinggi,
                                     ),
@@ -365,7 +368,8 @@ class _ControlPageState extends ConsumerState<ControlPage> {
                     ],
                   ),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text('Terjadi kesalahan')),
+            error: (error, stackTrace) =>
+                const Center(child: Text('Terjadi kesalahan')),
           ),
         ),
       ),
@@ -386,9 +390,14 @@ class _ControlPageState extends ConsumerState<ControlPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.primaryGreen),
             child: const Text('Batal'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               Navigator.pop(context);
               onConfirm();
@@ -401,10 +410,10 @@ class _ControlPageState extends ConsumerState<ControlPage> {
   }
 
   void _sendPumpCommand(bool value) {
-    // Send pump command
+    ref.read(commandStatusProvider.notifier).setPump(value);
   }
 
   void _sendUVCommand(bool value) {
-    // Send UV command
+    ref.read(commandStatusProvider.notifier).setUvLamp(value);
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iotani_berhasil/features/auth/providers/auth_provider.dart';
 import 'package:iotani_berhasil/core/theme/app_theme.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -14,6 +16,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -103,11 +106,84 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // For demo, just navigate to dashboard
-                      context.pushReplacement('/dashboard_page');
-                    },
-                    child: const Text('Masuk'),
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            final email = emailController.text.trim();
+                            final password = passwordController.text;
+
+                            if (email.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Email dan password wajib diisi.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            setState(() {
+                              _isLoading = true;
+                            });
+
+                            try {
+                              final firebaseService = ref.read(
+                                firebaseServiceProvider,
+                              );
+                              await firebaseService.signIn(
+                                email: email,
+                                password: password,
+                              );
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(
+                                context,
+                              ).hideCurrentSnackBar();
+
+                              // Router app already listens to authStateChanges and
+                              // redirects authenticated users to /dashboard.
+                            } on FirebaseAuthException catch (e) {
+                              if (!mounted) return;
+                              final signedInUser = ref.read(
+                                currentUserProvider,
+                              );
+                              if (signedInUser != null) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(_mapAuthErrorMessage(e.code)),
+                                ),
+                              );
+                            } catch (e) {
+                              if (!mounted) return;
+                              final signedInUser = ref.read(
+                                currentUserProvider,
+                              );
+                              if (signedInUser != null) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Gagal login. Silakan coba lagi.',
+                                  ),
+                                ),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Masuk'),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -122,7 +198,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         style: TextStyle(color: AppTheme.textMedium),
                       ),
                       GestureDetector(
-                        onTap: () => context.pushReplacement('/register'),
+                        onTap: () => context.go('/register'),
                         child: const Text(
                           'Daftar di sini',
                           style: TextStyle(
@@ -140,5 +216,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
     );
+  }
+
+  String _mapAuthErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'Format email tidak valid.';
+      case 'user-disabled':
+        return 'Akun ini telah dinonaktifkan.';
+      case 'user-not-found':
+      case 'invalid-credential':
+        return 'Email atau password salah.';
+      case 'wrong-password':
+        return 'Email atau password salah.';
+      case 'too-many-requests':
+        return 'Terlalu banyak percobaan login. Coba lagi nanti.';
+      default:
+        return 'Login gagal. Silakan coba lagi.';
+    }
   }
 }

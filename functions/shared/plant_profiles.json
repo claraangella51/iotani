@@ -1,0 +1,83 @@
+[
+  {
+    "plant": {
+      "name": "Silver Vase Plant",
+      "local_name": "Bromelia Perak",
+      "scientific_name": "Aechmea fasciata"
+    },
+    "light": "medium",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Flamingo Flower",
+      "local_name": "Anthurium",
+      "scientific_name": "Anthurium"
+    },
+    "light": "medium",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Cast Iron Plant",
+      "local_name": "Daun Aspidistra",
+      "scientific_name": "Aspidistra elatior"
+    },
+    "light": "low",
+    "water": "dry"
+  },
+  {
+    "plant": {
+      "name": "Begonia",
+      "local_name": "Begonia",
+      "scientific_name": "Begonia"
+    },
+    "light": "high",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Prayer Plant",
+      "local_name": "Kalatea",
+      "scientific_name": "Calathea"
+    },
+    "light": "medium",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Spider Plant",
+      "local_name": "Lili Paris",
+      "scientific_name": "Chlorophytum elatum"
+    },
+    "light": "high",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Ti Plant",
+      "local_name": "Andong",
+      "scientific_name": "Cordyline fruticosa"
+    },
+    "light": "medium",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Sword Fern",
+      "local_name": "Paku Pedang",
+      "scientific_name": "Nephrolepsis cordifolia"
+    },
+    "light": "medium",
+    "water": "moist"
+  },
+  {
+    "plant": {
+      "name": "Snake Plant",
+      "local_name": "Lidah Mertua",
+      "scientific_name": "Sansevieria"
+    },
+    "light": "low",
+    "water": "dry"
+  }
+]

@@ -162,6 +162,9 @@ To switch to real Firebase data, uncomment the streaming code in provider files 
 - **Android First**: Primary focus on Android, but Flutter code is cross-platform ready
 - **Extensible**: Framework supports adding more sensors, features, and actuators
 - **Language Support**: Currently Indonesian, easily adaptable to other languages
+- **ESP32 Firmware**: Safer relay-based example firmware is available in `firmware/iotani_esp32/iotani_esp32.ino`
+- **Hardware Wiring**: ESP32 + soil sensor + LDR + relay + 5V lamp guide is available in `docs/wiring_esp32.md`
+- **Firebase IoT Sync**: Flutter app and ESP32 integration guide is available in `docs/firebase_iot_integration.md`
 
 ## 🐛 Troubleshooting
 

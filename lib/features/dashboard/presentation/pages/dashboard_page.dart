@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iotani_berhasil/core/firebase/firebase_service.dart';
 import 'package:iotani_berhasil/core/theme/app_theme.dart';
 import 'package:iotani_berhasil/features/dashboard/domain/models/device_state.dart';
-import 'package:iotani_berhasil/features/dashboard/domain/models/plant_profile.dart';
 import 'package:iotani_berhasil/features/dashboard/providers/active_plant_provider.dart';
 import 'package:iotani_berhasil/features/dashboard/providers/device_state_provider.dart';
 import 'package:iotani_berhasil/shared/widgets/metric_card.dart';
 import 'package:iotani_berhasil/shared/widgets/plant_selector_widget.dart';
-import 'package:iotani_berhasil/shared/widgets/status_badge.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -92,19 +91,47 @@ class DashboardPage extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Plant Selector
-              PlantSelectorWidget(
-                activePlant: activePlant,
-                plants: plants,
-                onPlantChanged: (plant) {
-                  ref.read(activePlantProvider.notifier).state = plant;
-                },
+              plants.when(
+                data: (loadedPlants) => PlantSelectorWidget(
+                  activePlant: activePlant,
+                  plants: loadedPlants,
+                  onPlantChanged: (plant) {
+                    ref.read(activePlantProvider.notifier).state = plant;
+                    // Keep auto-control threshold/fuzzy aligned with selected plant.
+                    FirebaseService().setAutoPlantProfile(plant);
+                  },
+                ),
+                loading: () => const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Memuat daftar tanaman...'),
+                      ],
+                    ),
+                  ),
+                ),
+                error: (_, __) => const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Gagal memuat daftar tanaman dari shared catalog.',
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 28),
 
               // Status Overview
               deviceState.when(
                 data: (state) => state == null
-                    ? const SizedBox.shrink()
+                    ? _buildEmptyDeviceState()
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -140,28 +167,36 @@ class DashboardPage extends ConsumerWidget {
                               ),
                               MetricCard(
                                 label: 'Status Tanah',
-                                value: 'Ideal',
+                                value: DeviceState.getSoilStatusText(
+                                  state.soilMoisture,
+                                  activePlant.soilMoistureMin,
+                                  activePlant.soilMoistureMax,
+                                ),
                                 icon: Icons.local_florist,
                                 iconColor: AppTheme.primaryGreen,
+                                valueFontSize: 16,
+                                valueMaxLines: 2,
                               ),
                               MetricCard(
                                 label: 'Status Cahaya',
-                                value: 'Ideal',
+                                value: DeviceState.getLightStatusText(
+                                  state.lightLux,
+                                  activePlant.lightLuxMin,
+                                  activePlant.lightLuxMax,
+                                ),
                                 icon: Icons.sunny,
                                 iconColor: Color(0xFFFFB800),
+                                valueFontSize: 16,
+                                valueMaxLines: 2,
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildStatusSection(state, activePlant),
-                          const SizedBox(height: 16),
-                          _buildRecommendationSection(state, activePlant),
-                          const SizedBox(height: 16),
                           _buildActuatorStatusSection(state),
                         ],
                       ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const SizedBox.shrink(),
+                loading: () => _buildLoadingDeviceState(),
+                error: (_, __) => _buildDeviceStateError(),
               ),
             ],
           ),
@@ -170,114 +205,79 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusSection(DeviceState state, PlantProfile plant) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Status Risiko',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textDark,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            RiskStatusBadge(status: state.riskStatus, large: true),
-            const SizedBox(width: 12),
+  Widget _buildLoadingDeviceState() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: const [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
             Expanded(
               child: Text(
-                state.riskStatus.description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textMedium,
-                ),
+                'Menghubungkan data perangkat...',
+                style: TextStyle(color: AppTheme.textMedium),
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildRecommendationSection(DeviceState state, PlantProfile plant) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Rekomendasi',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textDark,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          color: AppTheme.accentLime.withOpacity(0.05),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Rentang Ideal untuk ${plant.name}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryGreen,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.water_drop,
-                            color: AppTheme.secondaryMint,
-                            size: 20,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Tanah: ${plant.soilMoistureMin}-${plant.soilMoistureMax}%',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.light_mode,
-                            color: Color(0xFFFFB800),
-                            size: 20,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Cahaya: ${plant.lightLuxMin}-${plant.lightLuxMax}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+  Widget _buildEmptyDeviceState() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Perangkat belum mengirim data',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textDark,
+              ),
             ),
-          ),
+            SizedBox(height: 8),
+            Text(
+              'Akun Anda sudah berhasil masuk. Hubungkan perangkat atau kirim data sensor pertama agar ringkasan beranda muncul di sini.',
+              style: TextStyle(color: AppTheme.textMedium),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildDeviceStateError() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Data perangkat belum bisa dimuat',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textDark,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Cek koneksi Firebase atau pastikan data `iotani/status` tersedia di Realtime Database.',
+              style: TextStyle(color: AppTheme.textMedium),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

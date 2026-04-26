@@ -9,13 +9,12 @@ import 'package:iotani_berhasil/features/control/presentation/pages/control_page
 import 'package:iotani_berhasil/features/history/presentation/pages/history_page.dart';
 import 'package:iotani_berhasil/features/settings/presentation/pages/device_profile_page.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<NavigatorState> _shellNavigatorKey =
-    GlobalKey<NavigatorState>();
-
 GoRouter appRouter({required bool isAuthenticated}) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
+  final shellNavigatorKey = GlobalKey<NavigatorState>();
+
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: isAuthenticated ? '/dashboard' : '/login',
     redirect: (context, state) {
       final isAuth = isAuthenticated;
@@ -43,7 +42,7 @@ GoRouter appRouter({required bool isAuthenticated}) {
 
       // Shell route for main navigation
       ShellRoute(
-        navigatorKey: _shellNavigatorKey,
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) => BottomNavShell(child: child),
         routes: [
           GoRoute(

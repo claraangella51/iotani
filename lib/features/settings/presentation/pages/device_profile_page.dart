@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:iotani_berhasil/core/theme/app_theme.dart';
+import 'package:iotani_berhasil/features/auth/providers/auth_provider.dart';
 import 'package:iotani_berhasil/features/dashboard/providers/device_state_provider.dart';
 import 'package:iotani_berhasil/features/dashboard/providers/active_plant_provider.dart';
 
@@ -175,18 +175,8 @@ class DeviceProfilePage extends ConsumerWidget {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 8),
                         ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Catatan: Ambang batas ini dapat disesuaikan melalui aplikasi web admin.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textLight,
-                          fontStyle: FontStyle.italic,
-                        ),
                       ),
                     ],
                   ),
@@ -203,13 +193,67 @@ class DeviceProfilePage extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.go('/login');
+                  onPressed: () async {
+                    final shouldLogout = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) {
+                        return AlertDialog(
+                          title: const Text('Konfirmasi Keluar'),
+                          content: const Text(
+                            'Apakah Anda yakin ingin keluar dari akun ini?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(false),
+                              child: const Text('Batal'),
+                            ),
+                            FilledButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(true),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppTheme.primaryGreen,
+                                foregroundColor: Colors.white,
+                                overlayColor: AppTheme.secondaryMint.withValues(
+                                  alpha: 0.18,
+                                ),
+                                splashFactory: NoSplash.splashFactory,
+                              ),
+                              child: const Text('Ya, Keluar'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (shouldLogout != true || !context.mounted) return;
+
+                    try {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      final firebaseService = ref.read(firebaseServiceProvider);
+                      await firebaseService.signOut();
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      final signedInUser = ref.read(currentUserProvider);
+                      if (signedInUser == null) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: AppTheme.textDark,
+                          content: Text('Gagal logout. Coba lagi.'),
+                        ),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text('Keluar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.statusRisikoTinggi,
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.white,
+                    overlayColor: AppTheme.secondaryMint.withValues(
+                      alpha: 0.18,
+                    ),
+                    splashFactory: NoSplash.splashFactory,
                   ),
                 ),
               ),

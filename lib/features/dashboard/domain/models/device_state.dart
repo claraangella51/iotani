@@ -86,7 +86,7 @@ class DeviceState {
 
   static String getSoilStatusText(int soilMoisture, int min, int max) {
     if (soilMoisture < min) return 'Terlalu Kering';
-    if (soilMoisture > max) return 'Terlalu Lembap';
+    if (soilMoisture > max) return 'Terlalu Basah';
     return 'Ideal';
   }
 

@@ -1,32 +1,33 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-/// Initialize Firebase - call this in main() before runApp()
-Future<void> initializeFirebase() async {
-  await Firebase.initializeApp();
-}
+import 'package:iotani_berhasil/features/dashboard/domain/models/plant_profile.dart';
+import 'package:iotani_berhasil/features/monitoring/domain/models/sensor_reading.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
 
-  factory FirebaseService() {
-    return _instance;
-  }
+  factory FirebaseService() => _instance;
 
   FirebaseService._internal();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseDatabase _database = FirebaseDatabase.instance;
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  // Auth methods
+  // =========================
+  // AUTH
+  // =========================
+
+  Stream<User?> authStateChanges() {
+    return _auth.authStateChanges();
+  }
+
+  User? getCurrentUser() => _auth.currentUser;
+
   Future<UserCredential> signUp({
     required String email,
     required String password,
-  }) async {
-    return await _auth.createUserWithEmailAndPassword(
+  }) {
+    return _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -35,209 +36,197 @@ class FirebaseService {
   Future<UserCredential> signIn({
     required String email,
     required String password,
-  }) async {
-    return await _auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  }
-
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
-
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
-
-  Stream<User?> authStateChanges() {
-    return _auth.authStateChanges();
-  }
-
-  Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
-  }
-
-  // Database methods - Device State
-  Future<void> setDeviceState({
-    required String deviceId,
-    required Map<String, dynamic> state,
-  }) async {
-    await _database.ref('devices/$deviceId/state').set(state);
-  }
-
-  Stream<Map<String, dynamic>?> streamDeviceState(String deviceId) {
-    return _database.ref('devices/$deviceId/state').onValue.map((event) {
-      if (event.snapshot.exists) {
-        return Map<String, dynamic>.from(event.snapshot.value as Map);
-      }
-      return null;
-    });
-  }
-
-  // Database methods - Sensor Readings
-  Future<void> addSensorReading({
-    required String deviceId,
-    required Map<String, dynamic> reading,
-  }) async {
-    final key = _database.ref('sensor_readings/$deviceId').push().key;
-    await _database.ref('sensor_readings/$deviceId/$key').set({
-      ...reading,
-      'id': key,
-      'deviceId': deviceId,
-    });
-  }
-
-  Stream<List<Map<String, dynamic>>> streamRecentReadings(
-    String deviceId, {
-    int limit = 20,
   }) {
-    return _database
-        .ref('sensor_readings/$deviceId')
-        .orderByChild('timestamp')
-        .limitToLast(limit)
-        .onValue
-        .map((event) {
-          if (event.snapshot.exists) {
-            final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-            return data.entries
-                .map((e) => Map<String, dynamic>.from(e.value as Map))
-                .toList()
-                .reversed
-                .toList();
-          }
-          return [];
-        });
+    return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  // Database methods - Commands
-  Future<void> sendCommand({
-    required String deviceId,
-    required String actionType, // 'pump', 'uv_lamp', 'mode'
-    required String target,
-    required bool value,
-  }) async {
-    final key = _database.ref('commands/$deviceId').push().key;
-    await _database.ref('commands/$deviceId/$key').set({
-      'id': key,
-      'actionType': actionType,
-      'target': target,
-      'value': value,
-      'status': 'pending',
-      'createdAt': ServerValue.timestamp,
-      'executedAt': null,
-    });
+  Future<void> signOut() {
+    return _auth.signOut();
   }
 
-  Stream<List<Map<String, dynamic>>> streamCommandStatus(String deviceId) {
-    return _database.ref('commands/$deviceId').onValue.map((event) {
-      if (event.snapshot.exists) {
-        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-        return data.entries
-            .map((e) => Map<String, dynamic>.from(e.value as Map))
-            .toList();
-      }
-      return [];
-    });
-  }
-
-  // Database methods - Alerts
-  Future<void> addAlert({
-    required String userId,
-    required String title,
-    required String message,
-    required String riskStatus,
-  }) async {
-    final key = _database.ref('alerts/$userId').push().key;
-    await _database.ref('alerts/$userId/$key').set({
-      'id': key,
-      'title': title,
-      'message': message,
-      'riskStatus': riskStatus,
-      'read': false,
-      'createdAt': ServerValue.timestamp,
-    });
-  }
-
-  Stream<List<Map<String, dynamic>>> streamAlerts(String userId) {
-    return _database
-        .ref('alerts/$userId')
-        .orderByChild('createdAt')
-        .onValue
-        .map((event) {
-          if (event.snapshot.exists) {
-            final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-            return data.entries
-                .map((e) => Map<String, dynamic>.from(e.value as Map))
-                .toList()
-                .reversed
-                .toList();
-          }
-          return [];
-        });
-  }
-
-  Future<void> markAlertAsRead(String userId, String alertId) async {
-    await _database.ref('alerts/$userId/$alertId/read').set(true);
-  }
-
-  // User profile
   Future<void> setUserProfile({
     required String userId,
     required Map<String, dynamic> profile,
-  }) async {
-    await _database.ref('users/$userId').update(profile);
+  }) {
+    return _db.ref('users/$userId').set(profile);
   }
 
-  Stream<Map<String, dynamic>?> streamUserProfile(String userId) {
-    return _database.ref('users/$userId').onValue.map((event) {
-      if (event.snapshot.exists) {
-        return Map<String, dynamic>.from(event.snapshot.value as Map);
+  User? get user => _auth.currentUser;
+
+  // =========================
+  // IOTANI STREAM (REALTIME)
+  // =========================
+
+  Stream<Map<String, dynamic>?> streamIoTani() {
+    return streamDeviceState('device_001');
+  }
+
+  Stream<Map<String, dynamic>?> streamDeviceState(String deviceId) {
+    return _db.ref('iotani/status').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value == null) {
+        return null;
       }
-      return null;
+
+      final raw = Map<String, dynamic>.from(event.snapshot.value as Map);
+      return _normalizeStatusMap(raw, deviceId: deviceId);
     });
   }
 
-  // Push Notifications
-  Future<String?> getDeviceToken() async {
-    return await _messaging.getToken();
-  }
+  Stream<List<SensorReading>> streamRecentReadings(String deviceId) {
+    return _db.ref('iotani/sensor').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value == null) {
+        return <SensorReading>[];
+      }
 
-  Future<void> initializeMessaging() async {
-    // Permission request
-    await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Handle the message
-    });
-
-    // Handle background message
-    FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
-
-    // Handle notification tap
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      // Handle notification tap
+      final raw = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final reading = _normalizeSensorReadingMap(raw, deviceId: deviceId);
+      return [SensorReading.fromRealtimeDb(reading)];
     });
   }
 
-  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
-    // Handle background message
+  // =========================
+  // CONTROL MODE
+  // =========================
+
+  Future<void> setMode(String mode) async {
+    final normalizedMode = _normalizeMode(mode);
+    await _db.ref('iotani/control/mode').set(normalizedMode);
   }
 
-  Future<void> subscribeToTopic(String topic) async {
-    await _messaging.subscribeToTopic(topic);
+  Future<void> setAutoPlantProfile(PlantProfile plant) async {
+    final soilSpan = (plant.soilMoistureMax - plant.soilMoistureMin).abs();
+    final lightSpan = (plant.lightLuxMax - plant.lightLuxMin).abs();
+
+    // Soil is expressed in %, so keep fuzzy band small and responsive.
+    final soilFuzzyBand = soilSpan <= 0
+        ? 10
+        : (soilSpan / 2).round().clamp(10, 30);
+
+    // Light is in lux and much wider; use a proportional band with sane floor.
+    final lightFuzzyBand = lightSpan <= 0
+        ? 100
+        : (lightSpan * 0.15).round().clamp(50, 2000);
+
+    final profile = <String, dynamic>{
+      'id': plant.id,
+      'name': plant.name,
+      'category': plant.category,
+      'soilMin': plant.soilMoistureMin,
+      'soilMax': plant.soilMoistureMax,
+      'lightMin': plant.lightLuxMin,
+      'lightMax': plant.lightLuxMax,
+      'soilFuzzyBand': soilFuzzyBand,
+      'lightFuzzyBand': lightFuzzyBand,
+      'updatedAt': ServerValue.timestamp,
+    };
+
+    await _db.ref('iotani/control/plantProfile').set(profile);
   }
 
-  Future<void> unsubscribeFromTopic(String topic) async {
-    await _messaging.unsubscribeFromTopic(topic);
+  // =========================
+  // MANUAL CONTROL
+  // =========================
+
+  Future<void> setPompa(bool isOn) async {
+    await _db.ref('iotani/manual/pompa').set(isOn ? 'ON' : 'OFF');
+  }
+
+  Future<void> setLampu(bool isOn) async {
+    await _db.ref('iotani/manual/lampu').set(isOn ? 'ON' : 'OFF');
+  }
+
+  Future<void> sendCommand({
+    required String deviceId,
+    required String actionType,
+    required String target,
+    required bool value,
+  }) async {
+    switch (target) {
+      case 'mode':
+        await setMode(value ? 'manual' : 'auto');
+        return;
+      case 'pump':
+        await setPompa(value);
+        return;
+      case 'uv_lamp':
+        await setLampu(value);
+        return;
+      default:
+        throw FirebaseException(
+          plugin: 'firebase_database',
+          message: 'Target command tidak dikenali: $target',
+        );
+    }
+  }
+
+  Map<String, dynamic> _normalizeStatusMap(
+    Map<String, dynamic> data, {
+    required String deviceId,
+  }) {
+    final map = Map<String, dynamic>.from(data);
+
+    map['deviceId'] = (map['deviceId'] as String?) ?? deviceId;
+    map['soilMoisture'] = map['soilMoisture'] ?? map['kelembapan'] ?? 0;
+    map['lightLux'] = map['lightLux'] ?? map['cahaya'] ?? 0;
+    map['riskStatus'] = map['riskStatus'] ?? 'aman';
+    map['mode'] = _normalizeMode(map['mode'] as String?);
+    map['pumpStatus'] = _toBool(map['pumpStatus'] ?? map['pompa']);
+    map['uvLampStatus'] = _toBool(map['uvLampStatus'] ?? map['lampu']);
+    map['lastUpdated'] =
+        map['lastUpdated'] ??
+        map['lastUpdate'] ??
+        DateTime.now().millisecondsSinceEpoch;
+    map['isConnected'] = map['isConnected'] ?? true;
+
+    final plant = map['plant'];
+    if (plant is Map) {
+      map['plant'] = Map<String, dynamic>.from(plant);
+    }
+
+    return map;
+  }
+
+  Map<String, dynamic> _normalizeSensorReadingMap(
+    Map<String, dynamic> data, {
+    required String deviceId,
+  }) {
+    final map = Map<String, dynamic>.from(data);
+
+    map['id'] = (map['id'] as String?) ?? 'latest';
+    map['deviceId'] = (map['deviceId'] as String?) ?? deviceId;
+    map['soilMoisture'] = map['soilMoisture'] ?? map['kelembapan'] ?? 0;
+    map['lightLux'] = map['lightLux'] ?? map['cahaya'] ?? 0;
+    map['riskStatus'] = map['riskStatus'] ?? 'aman';
+    map['timestamp'] =
+        map['timestamp'] ??
+        map['lastUpdate'] ??
+        DateTime.now().millisecondsSinceEpoch;
+
+    return map;
+  }
+
+  String _normalizeMode(String? mode) {
+    switch (mode) {
+      case 'manual':
+        return 'manual';
+      case 'auto':
+      case 'otomatis':
+      default:
+        return 'auto';
+    }
+  }
+
+  bool _toBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'on' || normalized == 'true' || normalized == '1';
+    }
+    return false;
   }
 }

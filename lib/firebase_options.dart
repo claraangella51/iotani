@@ -57,6 +57,8 @@ class DefaultFirebaseOptions {
     appId: '1:297552160824:android:fc87561bfb519fcbc09ecd',
     messagingSenderId: '297552160824',
     projectId: 'iotani-kelompok3',
+    databaseURL: 'https://iotani-kelompok3-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'iotani-kelompok3.firebasestorage.app',
   );
+
 }

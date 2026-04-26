@@ -10,6 +10,8 @@ class MetricCard extends StatelessWidget {
   final bool isLoading;
   final Widget? trailing;
   final VoidCallback? onTap;
+  final double valueFontSize;
+  final int valueMaxLines;
 
   const MetricCard({
     super.key,
@@ -21,6 +23,8 @@ class MetricCard extends StatelessWidget {
     this.isLoading = false,
     this.trailing,
     this.onTap,
+    this.valueFontSize = 24,
+    this.valueMaxLines = 1,
   });
 
   @override
@@ -57,6 +61,8 @@ class MetricCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppTheme.textLight,
@@ -71,12 +77,14 @@ class MetricCard extends StatelessWidget {
                 )
               else
                 RichText(
+                  maxLines: valueMaxLines,
+                  overflow: TextOverflow.ellipsis,
                   text: TextSpan(
                     children: [
                       TextSpan(
                         text: value ?? '--',
-                        style: const TextStyle(
-                          fontSize: 24,
+                        style: TextStyle(
+                          fontSize: valueFontSize,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textDark,
                         ),

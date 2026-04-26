@@ -17,96 +17,16 @@ class PlantProfile {
     required this.lightLuxMax,
   });
 
-  static final List<PlantProfile> builtInPlants = [
-    PlantProfile(
-      id: 'tomat_cherry',
-      name: 'Tomat Cherry',
-      category: 'Buah',
-      soilMoistureMin: 50,
+  static PlantProfile defaultPlant() {
+    return PlantProfile(
+      id: 'silver_vase_plant',
+      name: 'Silver Vase Plant',
+      category: 'Hias',
+      soilMoistureMin: 40,
       soilMoistureMax: 70,
-      lightLuxMin: 3000,
-      lightLuxMax: 8000,
-    ),
-    PlantProfile(
-      id: 'cabai_rawit',
-      name: 'Cabai Rawit',
-      category: 'Buah',
-      soilMoistureMin: 50,
-      soilMoistureMax: 80,
-      lightLuxMin: 3000,
-      lightLuxMax: 9000,
-    ),
-    PlantProfile(
-      id: 'stroberi',
-      name: 'Stroberi',
-      category: 'Buah',
-      soilMoistureMin: 60,
-      soilMoistureMax: 80,
-      lightLuxMin: 2000,
-      lightLuxMax: 6000,
-    ),
-    PlantProfile(
-      id: 'selada',
-      name: 'Selada',
-      category: 'Sayur',
-      soilMoistureMin: 60,
-      soilMoistureMax: 80,
-      lightLuxMin: 2000,
-      lightLuxMax: 5000,
-    ),
-    PlantProfile(
-      id: 'pakcoy',
-      name: 'Pakcoy',
-      category: 'Sayur',
-      soilMoistureMin: 60,
-      soilMoistureMax: 80,
-      lightLuxMin: 2000,
-      lightLuxMax: 5000,
-    ),
-    PlantProfile(
-      id: 'bayam',
-      name: 'Bayam',
-      category: 'Sayur',
-      soilMoistureMin: 60,
-      soilMoistureMax: 80,
-      lightLuxMin: 2500,
-      lightLuxMax: 6000,
-    ),
-    PlantProfile(
-      id: 'lidah_mertua',
-      name: 'Lidah Mertua',
-      category: 'Hias',
-      soilMoistureMin: 20,
-      soilMoistureMax: 40,
-      lightLuxMin: 500,
-      lightLuxMax: 3000,
-    ),
-    PlantProfile(
-      id: 'monstera',
-      name: 'Monstera',
-      category: 'Hias',
-      soilMoistureMin: 40,
-      soilMoistureMax: 60,
-      lightLuxMin: 1000,
-      lightLuxMax: 3000,
-    ),
-    PlantProfile(
-      id: 'aglonema',
-      name: 'Aglonema',
-      category: 'Hias',
-      soilMoistureMin: 40,
-      soilMoistureMax: 60,
-      lightLuxMin: 500,
-      lightLuxMax: 2500,
-    ),
-  ];
-
-  static PlantProfile? getById(String id) {
-    try {
-      return builtInPlants.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
+      lightLuxMin: 807,
+      lightLuxMax: 1614,
+    );
   }
 
   @override

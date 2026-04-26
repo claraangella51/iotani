@@ -28,7 +28,17 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: primaryGreen,
+      colorScheme: const ColorScheme.light(
+        primary: primaryGreen,
+        secondary: secondaryMint,
+        error: errorColor,
+        surface: cardColor,
+      ),
       scaffoldBackgroundColor: backgroundColor,
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: primaryGreen,
+        selectionHandleColor: primaryGreen,
+      ),
       textTheme: GoogleFonts.poppinsTextTheme(
         const TextTheme(
           displayLarge: TextStyle(
@@ -123,6 +133,10 @@ class AppTheme {
         filled: true,
         fillColor: const Color(0xFFF5F5F5),
         hintStyle: const TextStyle(color: textLight),
+        labelStyle: const TextStyle(color: textMedium),
+        floatingLabelStyle: const TextStyle(color: primaryGreen),
+        prefixIconColor: textMedium,
+        suffixIconColor: textMedium,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: dividerColor),
@@ -150,6 +164,9 @@ class AppTheme {
         backgroundColor: secondaryMint,
         foregroundColor: Colors.white,
         elevation: 4,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: primaryGreen,
       ),
     );
   }

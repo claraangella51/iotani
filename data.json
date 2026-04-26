@@ -1,0 +1,41 @@
+{
+  "iotani": {
+    "control": {
+      "lampu": "OFF",
+      "localName": "Bromelia Perak",
+      "mode": "manual",
+      "plant": {
+        "local_name": "Bromelia Perak",
+        "name": "Silver Vase Plant",
+        "scientific_name": "Aechmea fasciata"
+      },
+      "pompa": "OFF",
+      "riskStatus": "risiko_tinggi",
+      "scientificName": "Aechmea fasciata",
+      "updatedAt": 1777036206556
+    },
+    "sensor": {
+      "cahaya": 100,
+      "kelembapan": 23,
+      "plantIndex": 0,
+      "timestamp": 944935
+    },
+    "status": {
+      "cahaya": 100,
+      "kelembapan": 12,
+      "lampu": "OFF",
+      "lastUpdate": 1777036206563,
+      "lightRequirement": "medium",
+      "localName": "Bromelia Perak",
+      "mode": "mode",
+      "plant": {
+        "local_name": "Bromelia Perak",
+        "name": "Silver Vase Plant",
+        "scientific_name": "Aechmea fasciata"
+      },
+      "pompa": "OFF",
+      "riskStatus": "risiko_tinggi",
+      "waterRequirement": "moist"
+    }
+  }
+}
